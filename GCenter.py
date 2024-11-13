@@ -3,6 +3,7 @@ from typing import (
     Any,
     Dict
 )
+
 import urllib3
 import json
 
@@ -1334,7 +1335,20 @@ def fetch_incidents():
     ret = client._get(endpoint="/api/v1/alerts")
     results = ret.json()
     gwAlerts = results['results']
-    demisto.incidents(gwAlerts)
+
+    incidents = []
+    
+    for i in range(0, len(gwAlerts)):
+    	 
+    	 incident = {
+    	 	'name': gwAlerts[i]['name'],
+    	 	'occured': str(gwAlerts[i]['date']),
+    	 	'dbotMirrorId': str(gwAlerts[i]['id']),
+    	 	'rawJSON': str(gwAlerts[i]) #json.dumps(str())
+    	 }
+    	 incidents.append(incident)
+    
+    demisto.incidents(incidents)
 
 def gw_list_alerts(client: GwClient, args: Dict[str, Any]) -> CommandResults:  # noqa: E501
     """Get the latest elasticsearch alerts sorted by date in
@@ -1976,6 +1990,110 @@ def main() -> None:
             )
         elif command == "fetch-incidents":
             return_results(fetch_incidents())
+        elif command == "gw-list-alerts":
+            return_results(
+                gw_list_alerts(client=client, args=args)
+            )
+        elif command == "gw-get-alert":
+            return_results(
+                gw_get_alert(client=client, args=args)
+            )
+        elif command == "gw-get-malcore-list-entry":
+            return_results(
+                gw_get_malcore_list_entry(client=client, args=args)
+            )
+        elif command == "gw-add-malcore-list-entry":
+            return_results(
+                gw_add_malcore_list_entry(client=client, args=args)
+            )
+        elif command == "gw-del-malcore-list-entry":
+            return_results(
+                gw_del_malcore_list_entry(client=client, args=args)
+            )
+        elif command == "gw-get-dga-list-entry":
+            return_results(
+                gw_get_dga_list_entry(client=client, args=args)
+            )
+        elif command == "gw-add-dga-list-entry":
+            return_results(
+                gw_add_dga_list_entry(client=client, args=args)
+            )
+        elif command == "gw-del-dga-list-entry":
+            return_results(
+                gw_del_dga_list_entry(client=client, args=args)
+            )
+        elif command == "gw-es-query":
+            return_results(
+                gw_es_query(client=client, args=args)
+            )
+        elif command == "gw-es-wrapper":
+            return_results(
+                gw_es_wrapper(client=client, args=args)
+            )
+        elif command == "gw-get-file-infected":
+            return_results(
+                gw_get_file_infected(client=client, args=args)
+            )
+        elif command == "gw-get-ignore-asset-name":
+            return_results(
+                gw_get_ignore_asset_name(client=client, args=args)
+            )
+        elif command == "gw-get-ignore-kuser-ip":
+            return_results(
+                gw_get_ignore_kuser_ip(client=client, args=args)
+            )
+        elif command == "gw-get-ignore-kuser-name":
+            return_results(
+                gw_get_ignore_kuser_name(client=client, args=args)
+            )
+        elif command == "gw-get-ignore-mac-address":
+            return_results(
+                gw_get_ignore_mac_address(client=client, args=args)
+            )
+        elif command == "gw-add-ignore-asset-name":
+            return_results(
+                gw_add_ignore_asset_name(client=client, args=args)
+            )
+        elif command == "gw-add-ignore-kuser-ip":
+            return_results(
+                gw_add_ignore_kuser_ip(client=client, args=args)
+            )
+        elif command == "gw-add-ignore-kuser-name":
+            return_results(
+                gw_add_ignore_kuser_name(client=client, args=args)
+            )
+        elif command == "gw-add-ignore-mac-address":
+            return_results(
+                gw_add_ignore_mac_address(client=client, args=args)
+            )
+        elif command == "gw-del-ignore-asset-name":
+            return_results(
+                gw_del_ignore_asset_name(client=client, args=args)
+            )
+        elif command == "gw-del-ignore-kuser-ip":
+            return_results(
+                gw_del_ignore_kuser_ip(client=client, args=args)
+            )
+        elif command == "gw-del-ignore-kuser-name":
+            return_results(
+                gw_del_ignore_kuser_name(client=client, args=args)
+            )
+        elif command == "gw-del-ignore-mac-address":
+            return_results(
+                gw_del_ignore_mac_address(client=client, args=args)
+            )
+        elif command == "gw-send-malware":
+            return_results(
+                gw_send_malware(client=client, args=args)
+            )
+        elif command == "gw-send-powershell":
+            return_results(
+                gw_send_powershell(client=client, args=args)
+            )
+        elif command == "gw-send-shellcode":
+            return_results(
+                gw_send_shellcode(client=client, args=args)
+            )
     except Exception as e:
         return_error(
             f"Failed to execute {command} command.\nError: {str(e)}"
