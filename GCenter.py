@@ -1332,19 +1332,22 @@ def fetch_incidents():
         token=token
     )
     
-    ret = client._get(endpoint="/api/v1/alerts")
+    ret = client._post(endpoint="/api/v1/data/es/search/?index=engines_alerts", params={"index": "engines_alerts"})
     results = ret.json()
-    gwAlerts = results['results']
+    gwAlerts = results['hits']['hits']
 
     incidents = []
     
     for i in range(0, len(gwAlerts)):
-    	 
+
     	 incident = {
-    	 	'name': gwAlerts[i]['name'],
-    	 	'occured': str(gwAlerts[i]['date']),
-    	 	'dbotMirrorId': str(gwAlerts[i]['id']),
-    	 	'rawJSON': str(gwAlerts[i]) #json.dumps(str())
+    	 	'name': gwAlerts[i]['_source']['event']['module'],
+    	 	'occurred': str(gwAlerts[i]['_source']['@timestamp']),
+    	 	'dbotMirrorId': str(gwAlerts[i]['_source']['network']['flow_id']),
+    	 	'protocol': str(gwAlerts[i]['_source']['network']['protocol']),
+    	 	'rawJSON': json.dumps(gwAlerts[i]['_source']),
+    	 	'severity': gwAlerts[i]['_source']['event']['severity'],
+    	 	'type': str(gwAlerts[i]['_source']['event']['category'][0])
     	 }
     	 incidents.append(incident)
     
