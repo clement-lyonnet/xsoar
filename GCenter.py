@@ -1340,16 +1340,28 @@ def fetch_incidents():
     
     for i in range(0, len(gwAlerts)):
 
-    	 incident = {
-    	 	'name': gwAlerts[i]['_source']['event']['module'],
-    	 	'occurred': str(gwAlerts[i]['_source']['@timestamp']),
-    	 	'dbotMirrorId': str(gwAlerts[i]['_source']['network']['flow_id']),
-    	 	'protocol': str(gwAlerts[i]['_source']['network']['protocol']),
-    	 	'rawJSON': json.dumps(gwAlerts[i]['_source']),
-    	 	'severity': gwAlerts[i]['_source']['event']['severity'],
-    	 	'type': str(gwAlerts[i]['_source']['event']['category'][0])
-    	 }
-    	 incidents.append(incident)
+        incident = {'name': gwAlerts[i]['_source']['event']['module'],
+                    'occurred': str(gwAlerts[i]['_source']['@timestamp']),
+                    'dbotMirrorId': str(gwAlerts[i]['_source']['network']['flow_id']),
+                    'protocol': str(gwAlerts[i]['_source']['network']['protocol']),
+                    'rawJSON': json.dumps(gwAlerts[i]['_source']),
+                    'severity': gwAlerts[i]['_source']['event']['severity'],
+                    'CustomFields': {'flow_id': gwAlerts[i]['_source']['network']['flow_id'],
+                                     'rawEventGatewatcher': json.dumps(gwAlerts[i]['_source'])
+                                     }
+                    }
+
+        category = str(gwAlerts[i]['_source']['event']['category'])
+        if "network" in category:
+            incident['type'] = "Network"
+
+        if gwAlerts[i]['_source']['event']['module'] == "malicious_powershell_detect":
+            incident['type'] = "Review Indicators Manually"
+
+        if gwAlerts[i]['_source']['event']['module'] == "shellcode_detect":
+            incident['type'] = "Exploit"
+
+        incidents.append(incident)
     
     demisto.incidents(incidents)
 
