@@ -1332,7 +1332,8 @@ def fetch_incidents():
         token=token
     )
     
-    ret = client._post(endpoint="/api/v1/data/es/search/?index=engines_alerts", params={"index": "engines_alerts"})
+    # Alert events
+    ret = client._post(endpoint="/api/v1/data/es/search/", params={"index": "engines_alerts"}, data={"from": "9990"})
     results = ret.json()
     gwAlerts = results['hits']['hits']
 
@@ -1340,20 +1341,16 @@ def fetch_incidents():
     
     for i in range(0, len(gwAlerts)):
 
-        incident = {'name': gwAlerts[i]['_source']['event']['module'],
+        incident = {'name': "Gatewatcher Alert: " + gwAlerts[i]['_source']['event']['module'],
                     'occurred': str(gwAlerts[i]['_source']['@timestamp']),
                     'dbotMirrorId': str(gwAlerts[i]['_source']['network']['flow_id']),
-                    'protocol': str(gwAlerts[i]['_source']['network']['protocol']),
+                    'Protocol': str(gwAlerts[i]['_source']['network']['protocol']),
                     'rawJSON': json.dumps(gwAlerts[i]['_source']),
                     'severity': gwAlerts[i]['_source']['event']['severity'],
                     'CustomFields': {'flow_id': gwAlerts[i]['_source']['network']['flow_id'],
                                      'rawEventGatewatcher': json.dumps(gwAlerts[i]['_source'])
                                      }
                     }
-
-        category = str(gwAlerts[i]['_source']['event']['category'])
-        if "network" in category:
-            incident['type'] = "Network"
 
         if gwAlerts[i]['_source']['event']['module'] == "malicious_powershell_detect":
             incident['type'] = "Review Indicators Manually"
@@ -1363,6 +1360,29 @@ def fetch_incidents():
 
         incidents.append(incident)
     
+    # Metadata events
+    ret = client._post(endpoint="/api/v1/data/es/search/", params={"index": "engines_metadata"}, data={"from": "9990"})
+    results = ret.json()
+    gwMeta = results['hits']['hits']
+
+    incidents = []
+
+    for i in range(0, len(gwMeta)):
+
+        incident = {'name': "Gatewatcher Metadata: " + gwMeta[i]['_source']['event']['module'],
+                    'occurred': str(gwMeta[i]['_source']['@timestamp']),
+                    'dbotMirrorId': str(gwMeta[i]['_source']['network']['flow_id']),
+                    'Protocol': str(gwMeta[i]['_source']['network']['protocol']),
+                    'rawJSON': json.dumps(gwMeta[i]['_source']),
+                    'severity': 1,
+                    'type': "Network",
+                    'CustomFields': {'flow_id': gwMeta[i]['_source']['network']['flow_id'],
+                                     'rawEventGatewatcher': json.dumps(gwMeta[i]['_source'])
+                                     }
+                    }
+
+        incidents.append(incident)
+
     demisto.incidents(incidents)
 
 def gw_list_alerts(client: GwClient, args: Dict[str, Any]) -> CommandResults:  # noqa: E501
