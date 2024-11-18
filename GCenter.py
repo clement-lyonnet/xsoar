@@ -1313,7 +1313,7 @@ def test_module(client: GwClient) -> str:  # noqa: E501
         return "Authentication error, please check ip/user/password/token: [ERROR]"
 
 def fetch_incidents():
-    
+
     params = demisto.params()
     command = demisto.command()
     args = demisto.args()
@@ -1332,8 +1332,19 @@ def fetch_incidents():
         token=token
     )
     
+    queryRange = {'query': {
+                    'range': {
+                        '@timestamp': {
+                            'gte': "now-5m/m",
+                            'lte': "now/m"
+                        }
+                    }
+                }
+                }
+
     # Alert events
-    ret = client._post(endpoint="/api/v1/data/es/search/", params={"index": "engines_alerts"}, data={"from": "9990"})
+    ret = client._post(endpoint="/api/v1/data/es/search/", params={"index": "engines_alerts"}, json_data=queryRange)
+
     results = ret.json()
     gwAlerts = results['hits']['hits']
 
@@ -1361,11 +1372,10 @@ def fetch_incidents():
         incidents.append(incident)
     
     # Metadata events
-    ret = client._post(endpoint="/api/v1/data/es/search/", params={"index": "engines_metadata"}, data={"from": "9990"})
+    ret = client._post(endpoint="/api/v1/data/es/search/", params={"index": "engines_metadata"}, json_data=queryRange)
+
     results = ret.json()
     gwMeta = results['hits']['hits']
-
-    incidents = []
 
     for i in range(0, len(gwMeta)):
 
