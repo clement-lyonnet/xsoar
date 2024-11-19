@@ -1332,15 +1332,43 @@ def fetch_incidents():
         token=token
     )
     
-    queryRange = {'query': {
-                    'range': {
-                        '@timestamp': {
-                            'gte': "now-5m/m",
-                            'lte': "now/m"
+    last_run = demisto.getLastRun()
+    last_fetch = last_run.get('time')
+
+    first_fetch = params.get('first_fetch', '1 day')
+    first_fetch_dt = arg_to_datetime(arg=first_fetch, arg_name='First fetch', required=True)
+    max_fetch = arg_to_number(args.get('max_fetch')) or params.get('max_fetch', '200')
+
+    # Fetch was never runned
+    if last_fetch is None:
+
+        #delta = timedelta(hours=1)
+        #first_fetch_dt = first_fetch_dt - delta
+        first_fetch_dt_str = first_fetch_dt.isoformat(sep='T', timespec='milliseconds')+"Z"
+
+        now = datetime.today()# - d
+        now_str = now.isoformat(sep='T', timespec='milliseconds')+"Z"
+
+        queryRange = {'query': {
+                        'range': {
+                            '@timestamp': {
+                                'gte': str(first_fetch_dt_str),
+                                'lte': str(now_str)
+                                }
+                            }
                         }
                     }
-                }
-                }
+    else:
+
+        queryRange = {'query': {
+                        'range': {
+                            '@timestamp': {
+                                'gte': "now-1m/m",
+                                'lte': "now/m"
+                                }
+                            }
+                        }
+                    }
 
     # Alert events
     ret = client._post(endpoint="/api/v1/data/es/search/", params={"index": "engines_alerts"}, json_data=queryRange)
@@ -1368,6 +1396,9 @@ def fetch_incidents():
 
         if gwAlerts[i]['_source']['event']['module'] == "shellcode_detect":
             incident['type'] = "Exploit"
+
+        if gwAlerts[i]['_source']['event']['module'] == "malcore":
+            incident['type'] = "Malware"
 
         incidents.append(incident)
     

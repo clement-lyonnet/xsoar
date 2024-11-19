@@ -39,6 +39,20 @@ configuration:
   name: isFetch
   type: 8
   required: false
+- defaultValue: 1 day
+  display: First fetch
+  name: first_fetch
+  type: 0
+  additionalinfo: This value represents how far the first fetch will grab the events stored in the GCenter.
+  section: Collect
+  required: false
+- defaultValue: 200
+  display: Fetch limit
+  name: max_fetch
+  type: 0
+  additionalinfo: This value represents the maximum events fetched by instruction. The default value is the optimum for Cortex XSOAR.
+  section: Collect
+  required: false
 description: This integration allows, via about twenty commands, to interact with the GCenter appliance via its API.
 display: GCenter-dev-fetch
 name: GCenter-dev-fetch
@@ -1330,4 +1344,3 @@ script:
 fromversion: 6.2.0
 tests:
 - Gcenter Test Playbook
-
