@@ -1360,11 +1360,15 @@ def fetch_incidents():
                     }
     else:
 
+        now = datetime.today()
+        now_str = now.isoformat(sep='T', timespec='milliseconds')+"Z"
+        last_run = demisto.getLastRun()
+        last_fetch = last_run.get('time')
         queryRange = {'query': {
                         'range': {
                             '@timestamp': {
-                                'gte': "now-1m/m",
-                                'lte': "now/m"
+                                'gte': str(last_fetch),
+                                'lte': str(now_str)
                                 }
                             }
                         }
@@ -1386,7 +1390,7 @@ def fetch_incidents():
                     'Protocol': str(gwAlerts[i]['_source']['network']['protocol']),
                     'rawJSON': json.dumps(gwAlerts[i]['_source']),
                     'severity': gwAlerts[i]['_source']['event']['severity'],
-                    'CustomFields': {'flow_id': gwAlerts[i]['_source']['network']['flow_id'],
+                    'CustomFields': {'flowIdGatewatcher': gwAlerts[i]['_source']['network']['flow_id'],
                                      'rawEventGatewatcher': json.dumps(gwAlerts[i]['_source'])
                                      }
                     }
@@ -1417,12 +1421,16 @@ def fetch_incidents():
                     'rawJSON': json.dumps(gwMeta[i]['_source']),
                     'severity': 1,
                     'type': "Network",
-                    'CustomFields': {'flow_id': gwMeta[i]['_source']['network']['flow_id'],
+                    'CustomFields': {'flowIdGatewatcher': gwMeta[i]['_source']['network']['flow_id'],
                                      'rawEventGatewatcher': json.dumps(gwMeta[i]['_source'])
                                      }
                     }
 
         incidents.append(incident)
+
+    now = datetime.today()
+    now_str = now.isoformat(sep='T', timespec='milliseconds')+"Z"
+    demisto.setLastRun({'start_time': str(now_str)})
 
     demisto.incidents(incidents)
 
