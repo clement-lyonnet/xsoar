@@ -1331,24 +1331,18 @@ def fetch_incidents():
         password=password if password != "" else None,
         token=token
     )
-    
-    last_run = demisto.getLastRun()
-    last_fetch = last_run.get('time')
 
     first_fetch = params.get('first_fetch', '1 day')
     first_fetch_dt = arg_to_datetime(arg=first_fetch, arg_name='First fetch', required=True)
     max_fetch = arg_to_number(args.get('max_fetch')) or params.get('max_fetch', '200')
 
+    last_run = demisto.getLastRun()
     # Fetch was never runned
-    if last_fetch is None:
-
-        #delta = timedelta(hours=1)
-        #first_fetch_dt = first_fetch_dt - delta
+    if last_run == {}:
         first_fetch_dt_str = first_fetch_dt.isoformat(sep='T', timespec='milliseconds')+"Z"
 
-        now = datetime.today()# - d
+        now = datetime.today()
         now_str = now.isoformat(sep='T', timespec='milliseconds')+"Z"
-
         queryRange = {'query': {
                         'range': {
                             '@timestamp': {
@@ -1359,16 +1353,15 @@ def fetch_incidents():
                         }
                     }
     else:
+        last_fetch = last_run.get('start_time')
 
         now = datetime.today()
         now_str = now.isoformat(sep='T', timespec='milliseconds')+"Z"
-        last_run = demisto.getLastRun()
-        last_fetch = last_run.get('time')
         queryRange = {'query': {
                         'range': {
                             '@timestamp': {
-                                'gte': str(last_fetch),
-                                'lte': str(now_str)
+                                'gt': str(last_fetch),
+                                'lt': str(now_str)
                                 }
                             }
                         }
@@ -1404,6 +1397,11 @@ def fetch_incidents():
         if gwAlerts[i]['_source']['event']['module'] == "malcore":
             incident['type'] = "Malware"
 
+
+        if 'sigflow' in gwAlerts[i]['_source'].values():
+            if 'signature' in gwAlerts[i]['_source']['sigflow'].values():
+                incident['name'] = "Gatewatcher Sigflow Alert: " + str(gwAlerts[i]['_source']['sigflow']['signature'])
+
         incidents.append(incident)
     
     # Metadata events
@@ -1428,9 +1426,10 @@ def fetch_incidents():
 
         incidents.append(incident)
 
-    now = datetime.today()
-    now_str = now.isoformat(sep='T', timespec='milliseconds')+"Z"
-    demisto.setLastRun({'start_time': str(now_str)})
+    if len(incidents) > 0:
+        incidents = sorted(incidents, key=lambda d: d['occurred'])
+        last_incident = incidents[len(incidents)-1]
+        demisto.setLastRun({'start_time': str(last_incident['occurred'])})
 
     demisto.incidents(incidents)
 
