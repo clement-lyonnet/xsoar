@@ -1392,11 +1392,17 @@ def fetch_incidents():
                     }
 
 
-        # Details with ip:port
+        # IP and port fields
         if 'port' in gwAlerts[i]['_source']['source'].keys() and gwAlerts[i]['_source']['destination'].keys():
-            incident['details'] = "IPs: "+str(gwAlerts[i]['_source']['source']['ip'])+" : "+str(gwAlerts[i]['_source']['source']['port'])+" -> "+str(gwAlerts[i]['_source']['destination']['ip'])+" : "+str(gwAlerts[i]['_source']['destination']['port'])
+            incident['details'] = "Source IP: "+str(gwAlerts[i]['_source']['source']['ip'])+"\n"+"Source port: "+str(gwAlerts[i]['_source']['source']['port'])+"\n"+"Destination IP: "+str(gwAlerts[i]['_source']['destination']['ip'])+"\n"+"Destination port: "+str(gwAlerts[i]['_source']['destination']['port'])
         else:
-            incident['details'] = "IPs: "+str(gwAlerts[i]['_source']['source']['ip'])+" -> "+str(gwAlerts[i]['_source']['destination']['ip'])
+            incident['details'] = "Source IP: "+str(gwAlerts[i]['_source']['source']['ip'])+"\n"+"Destination IP: "+str(gwAlerts[i]['_source']['destination']['ip'])
+
+        # Network protocol and transport fields
+        if 'protocol' in gwAlerts[i]['_source']['network'].keys():
+            incident['details'] += "\nProtocol: "+str(gwAlerts[i]['_source']['network']['protocol']).upper()
+        if 'transport' in gwAlerts[i]['_source']['network'].keys():
+            incident['details'] += "\nTransport: "+str(gwAlerts[i]['_source']['network']['transport']).upper()
 
         if gwAlerts[i]['_source']['event']['module'] == "malicious_powershell_detect":
             incident['type'] = "Review Indicators Manually"
@@ -1441,20 +1447,28 @@ def fetch_incidents():
                     'rawJSON': json.dumps(gwMeta[i]['_source']),
                     'severity': 1,
                     'sourceBrand': "Gatewatcher",
-                    'sourceInstance': str(gwAlerts[i]['_source']['observer']['hostname'])+" | "+str(gwAlerts[i]['_source']['observer']['gcap']['hostname']),
+                    'sourceInstance': str(gwMeta[i]['_source']['observer']['hostname'])+" | "+str(gwMeta[i]['_source']['observer']['gcap']['hostname']),
                     'type': "Network",
                     'CustomFields': {'flowIdGatewatcher': gwMeta[i]['_source']['network']['flow_id'],
-                                     'GCenterGatewatcher': str(gwAlerts[i]['_source']['observer']['hostname']),
-                                     'GCapGatewatcher': str(gwAlerts[i]['_source']['observer']['gcap']['hostname']),
+                                     'GCenterGatewatcher': str(gwMeta[i]['_source']['observer']['hostname']),
+                                     'GCapGatewatcher': str(gwMeta[i]['_source']['observer']['gcap']['hostname']),
                                      'rawEventGatewatcher': json.dumps(gwMeta[i]['_source'])
                                      }
                     }
 
-        # Details with ip:port
+        # IP and port fields
         if 'port' in gwMeta[i]['_source']['source'].keys() and gwMeta[i]['_source']['destination'].keys():
-            incident['details'] = "IPs: "+str(gwMeta[i]['_source']['source']['ip'])+" : "+str(gwMeta[i]['_source']['source']['port'])+" -> "+str(gwMeta[i]['_source']['destination']['ip'])+" : "+str(gwMeta[i]['_source']['destination']['port'])
+            incident['details'] = "Source IP: "+str(gwMeta[i]['_source']['source']['ip'])+"\n"+"Source port: "+str(gwMeta[i]['_source']['source']['port'])+"\n"+"Destination IP: "+str(gwMeta[i]['_source']['destination']['ip'])+"\n"+"Destination port: "+str(gwMeta[i]['_source']['destination']['port'])
         else:
-            incident['details'] = "IPs: "+str(gwMeta[i]['_source']['source']['ip'])+" -> "+str(gwMeta[i]['_source']['destination']['ip'])
+            incident['details'] = "Source IP: "+str(gwMeta[i]['_source']['source']['ip'])+"\n"+"Destination IP: "+str(gwMeta[i]['_source']['destination']['ip'])
+
+
+        # Network protocol and transport fields
+        if 'protocol' in gwMeta[i]['_source']['network'].keys():
+            incident['details'] += "\nProtocol: "+str(gwMeta[i]['_source']['network']['protocol']).upper()
+        if 'transport' in gwMeta[i]['_source']['network'].keys():
+            incident['details'] += "\nTransport: "+str(gwMeta[i]['_source']['network']['transport']).upper()
+
 
         incidents.append(incident)
 
