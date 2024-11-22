@@ -1374,19 +1374,28 @@ def fetch_incidents():
     gwAlerts = results['hits']['hits']
 
     incidents = []
-    
-    for i in range(0, len(gwAlerts)):
+
+	for i in range(0, len(gwAlerts)):
 
         incident = {'name': "Gatewatcher Alert: " + gwAlerts[i]['_source']['event']['module'],
                     'occurred': str(gwAlerts[i]['_source']['@timestamp']),
-                    'dbotMirrorId': str(gwAlerts[i]['_source']['network']['flow_id']),
-                    'Protocol': str(gwAlerts[i]['_source']['network']['protocol']),
+                    'dbotMirrorId': str(gwAlerts[i]['_source']['event']['id']),
+                    'labels': [{"value": str(gwAlerts[i]['_source']['source']['ip']), "type": "IP"},
+                               {"value": str(gwAlerts[i]['_source']['destination']['ip']), "type": "IP"}],
                     'rawJSON': json.dumps(gwAlerts[i]['_source']),
                     'severity': gwAlerts[i]['_source']['event']['severity'],
                     'CustomFields': {'flowIdGatewatcher': gwAlerts[i]['_source']['network']['flow_id'],
                                      'rawEventGatewatcher': json.dumps(gwAlerts[i]['_source'])
                                      }
                     }
+
+
+        # Details with ip:port
+        if "port" in (str(gwAlerts[i]['_source']['source']) and str(gwAlerts[i]['_source']['destination'])):
+            incident['details'] = str(gwAlerts[i]['_source']['source']['ip'])+" : "+str(gwAlerts[i]['_source']['source']['port'])+" -> "+str(gwAlerts[i]['_source']['destination']['ip'])+" : "+str(gwAlerts[i]['_source']['destination']['port'])
+        else:
+            incident['details'] = str(gwAlerts[i]['_source']['source']['ip'])+" -> "+str(gwAlerts[i]['_source']['destination']['ip'])
+
 
         if gwAlerts[i]['_source']['event']['module'] == "malicious_powershell_detect":
             incident['type'] = "Review Indicators Manually"
@@ -1397,10 +1406,14 @@ def fetch_incidents():
         if gwAlerts[i]['_source']['event']['module'] == "malcore":
             incident['type'] = "Malware"
 
-
-        if 'sigflow' in gwAlerts[i]['_source'].values():
-            if 'signature' in gwAlerts[i]['_source']['sigflow'].values():
-                incident['name'] = "Gatewatcher Sigflow Alert: " + str(gwAlerts[i]['_source']['sigflow']['signature'])
+        if gwAlerts[i]['_source']['event']['module'] == "dga_detect":
+            incident['type'] = "C2Communication"
+        
+        if 'sigflow' in gwAlerts[i]['_source'].keys():
+            if 'signature' in gwAlerts[i]['_source']['sigflow'].keys():
+                incident['name'] = "Gatewatcher Alert: " + str(gwAlerts[i]['_source']['sigflow']['signature'])
+                if "CnC" in str(gwAlerts[i]['_source']['sigflow']['signature']):
+                    incident['type'] = "C2Communication"
 
         incidents.append(incident)
     
@@ -1414,8 +1427,9 @@ def fetch_incidents():
 
         incident = {'name': "Gatewatcher Metadata: " + gwMeta[i]['_source']['event']['module'],
                     'occurred': str(gwMeta[i]['_source']['@timestamp']),
-                    'dbotMirrorId': str(gwMeta[i]['_source']['network']['flow_id']),
-                    'Protocol': str(gwMeta[i]['_source']['network']['protocol']),
+                    'dbotMirrorId': str(gwMeta[i]['_source']['event']['id']),
+                    'labels': [{"value": str(gwMeta[i]['_source']['source']['ip']), "type": "IP"},
+                               {"value": str(gwMeta[i]['_source']['destination']['ip']), "type": "IP"}],
                     'rawJSON': json.dumps(gwMeta[i]['_source']),
                     'severity': 1,
                     'type': "Network",
@@ -1423,6 +1437,12 @@ def fetch_incidents():
                                      'rawEventGatewatcher': json.dumps(gwMeta[i]['_source'])
                                      }
                     }
+
+        # Details with ip:port
+        if "port" in (str(gwMeta[i]['_source']['source']) and str(gwMeta[i]['_source']['destination'])):
+            incident['details'] = str(gwMeta[i]['_source']['source']['ip'])+" : "+str(gwMeta[i]['_source']['source']['port'])+" -> "+str(gwMeta[i]['_source']['destination']['ip'])+" : "+str(gwMeta[i]['_source']['destination']['port'])
+        else:
+            incident['details'] = str(gwMeta[i]['_source']['source']['ip'])+" -> "+str(gwMeta[i]['_source']['destination']['ip'])
 
         incidents.append(incident)
 
