@@ -1385,17 +1385,18 @@ def fetch_incidents():
                     'rawJSON': json.dumps(gwAlerts[i]['_source']),
                     'severity': gwAlerts[i]['_source']['event']['severity'],
                     'CustomFields': {'flowIdGatewatcher': gwAlerts[i]['_source']['network']['flow_id'],
+                                     'GCenterGatewatcher': str(gwAlerts[i]['_source']['observer']['hostname']),
+                                     'GCapGatewatcher': str(gwAlerts[i]['_source']['observer']['gcap']['hostname']),
                                      'rawEventGatewatcher': json.dumps(gwAlerts[i]['_source'])
                                      }
                     }
 
 
         # Details with ip:port
-        if "port" in (str(gwAlerts[i]['_source']['source']) and str(gwAlerts[i]['_source']['destination'])):
-            incident['details'] = str(gwAlerts[i]['_source']['source']['ip'])+" : "+str(gwAlerts[i]['_source']['source']['port'])+" -> "+str(gwAlerts[i]['_source']['destination']['ip'])+" : "+str(gwAlerts[i]['_source']['destination']['port'])
+        if 'port' in gwAlerts[i]['_source']['source'].keys() and gwAlerts[i]['_source']['destination'].keys():
+            incident['details'] = "IPs: "+str(gwAlerts[i]['_source']['source']['ip'])+" : "+str(gwAlerts[i]['_source']['source']['port'])+" -> "+str(gwAlerts[i]['_source']['destination']['ip'])+" : "+str(gwAlerts[i]['_source']['destination']['port'])
         else:
-            incident['details'] = str(gwAlerts[i]['_source']['source']['ip'])+" -> "+str(gwAlerts[i]['_source']['destination']['ip'])
-
+            incident['details'] = "IPs: "+str(gwAlerts[i]['_source']['source']['ip'])+" -> "+str(gwAlerts[i]['_source']['destination']['ip'])
 
         if gwAlerts[i]['_source']['event']['module'] == "malicious_powershell_detect":
             incident['type'] = "Review Indicators Manually"
@@ -1439,17 +1440,21 @@ def fetch_incidents():
                                {"value": str(gwMeta[i]['_source']['destination']['ip']), "type": "IP"}],
                     'rawJSON': json.dumps(gwMeta[i]['_source']),
                     'severity': 1,
+                    'sourceBrand': "Gatewatcher",
+                    'sourceInstance': str(gwAlerts[i]['_source']['observer']['hostname'])+" | "+str(gwAlerts[i]['_source']['observer']['gcap']['hostname']),
                     'type': "Network",
                     'CustomFields': {'flowIdGatewatcher': gwMeta[i]['_source']['network']['flow_id'],
+                                     'GCenterGatewatcher': str(gwAlerts[i]['_source']['observer']['hostname']),
+                                     'GCapGatewatcher': str(gwAlerts[i]['_source']['observer']['gcap']['hostname']),
                                      'rawEventGatewatcher': json.dumps(gwMeta[i]['_source'])
                                      }
                     }
 
         # Details with ip:port
-        if "port" in (str(gwMeta[i]['_source']['source']) and str(gwMeta[i]['_source']['destination'])):
-            incident['details'] = str(gwMeta[i]['_source']['source']['ip'])+" : "+str(gwMeta[i]['_source']['source']['port'])+" -> "+str(gwMeta[i]['_source']['destination']['ip'])+" : "+str(gwMeta[i]['_source']['destination']['port'])
+        if 'port' in gwMeta[i]['_source']['source'].keys() and gwMeta[i]['_source']['destination'].keys():
+            incident['details'] = "IPs: "+str(gwMeta[i]['_source']['source']['ip'])+" : "+str(gwMeta[i]['_source']['source']['port'])+" -> "+str(gwMeta[i]['_source']['destination']['ip'])+" : "+str(gwMeta[i]['_source']['destination']['port'])
         else:
-            incident['details'] = str(gwMeta[i]['_source']['source']['ip'])+" -> "+str(gwMeta[i]['_source']['destination']['ip'])
+            incident['details'] = "IPs: "+str(gwMeta[i]['_source']['source']['ip'])+" -> "+str(gwMeta[i]['_source']['destination']['ip'])
 
         incidents.append(incident)
 
