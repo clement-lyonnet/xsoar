@@ -1415,6 +1415,13 @@ def fetch_incidents():
                 if "CnC" in str(gwAlerts[i]['_source']['sigflow']['signature']):
                     incident['type'] = "C2Communication"
 
+        if 'nba' in gwAlerts[i]['_source'].keys():
+            if 'signature' in gwAlerts[i]['_source']['nba'].keys():
+                incident['name'] = "Gatewatcher Alert: " + str(gwAlerts[i]['_source']['nba']['signature'])
+                if "C&C" in str(gwAlerts[i]['_source']['nba']['signature']):
+                    incident['type'] = "C2Communication"
+
+
         incidents.append(incident)
     
     # Metadata events
